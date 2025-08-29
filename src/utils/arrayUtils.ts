@@ -2,9 +2,11 @@
  * Array utility functions for removing duplicates
  */
 
+import React from 'react';
+
 // 1. Using Set (Most efficient for primitive values)
 export const removeDuplicates = <T>(array: T[]): T[] => {
-  return [...new Set(array)];
+  return Array.from(new Set(array));
 };
 
 // 2. Using Set with custom key function (for objects)
@@ -31,7 +33,7 @@ export const removeDuplicatesFilter = <T>(array: T[]): T[] => {
 // 4. Using reduce (for primitive values)
 export const removeDuplicatesReduce = <T>(array: T[]): T[] => {
   return array.reduce((unique, item) => {
-    return unique.includes(item) ? unique : [...unique, item];
+    return unique.includes(item) ? unique : unique.concat([item]);
   }, [] as T[]);
 };
 
@@ -69,7 +71,7 @@ export const useUniqueArray = <T>(initialArray: T[] = []) => {
   const addUnique = React.useCallback((item: T) => {
     setUniqueArray(prev => {
       if (!prev.includes(item)) {
-        return [...prev, item];
+        return prev.concat([item]);
       }
       return prev;
     });
@@ -83,7 +85,7 @@ export const useUniqueArray = <T>(initialArray: T[] = []) => {
       const keyValue = item[key];
       const exists = prev.some(existingItem => existingItem[key] === keyValue);
       if (!exists) {
-        return [...prev, item];
+        return prev.concat([item]);
       }
       return prev;
     });

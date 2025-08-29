@@ -13,7 +13,7 @@ const SimpleDuplicateExamples: React.FC = () => {
 
   // 1. Remove duplicates from primitive array using Set
   const removePrimitiveDuplicates = () => {
-    const unique = [...new Set(examples.primitive)];
+    const unique = Array.from(new Set(examples.primitive));
     setExamples(prev => ({ ...prev, primitive: unique }));
   };
 
@@ -152,7 +152,7 @@ const SimpleDuplicateExamples: React.FC = () => {
             <h3 className="font-medium text-gray-700 mb-2">Primitive Values:</h3>
             <pre className="bg-white p-3 rounded text-sm overflow-x-auto">
 {`// Using Set (Most Efficient)
-const unique = [...new Set(array)];
+const unique = Array.from(new Set(array));
 
 // Using Filter
 const unique = array.filter((item, index) => 
@@ -161,7 +161,7 @@ const unique = array.filter((item, index) =>
 
 // Using Reduce
 const unique = array.reduce((acc, item) => 
-  acc.includes(item) ? acc : [...acc, item], []
+  acc.includes(item) ? acc : acc.concat([item]), []
 );`}
             </pre>
           </div>
