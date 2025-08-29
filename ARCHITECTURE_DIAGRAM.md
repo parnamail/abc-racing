@@ -7,7 +7,8 @@ graph TB
     subgraph "User Interface Layer"
         UI[User Interface]
         UI --> App
-        UI --> Nav[Navigation]
+        UI --> Nav[Navigation with i18n]
+        UI --> LS[Language Selector]
         UI --> AC[Accessibility Controls]
         UI --> OC[Offline Controls]
     end
@@ -22,7 +23,7 @@ graph TB
     end
 
     subgraph "Component Layer"
-        MF1 --> Card[Card Component]
+        MF1 --> Card[Enhanced Card Component]
         MF2 --> Card
         MF3 --> Card
         MF4 --> Card
@@ -32,53 +33,90 @@ graph TB
         MF3 --> Shimmer
         MF4 --> Shimmer
         
-        MF2 --> OI[OptimizedImage Component]
-        MF3 --> OI
+        Card --> CardHooks[Card Custom Hooks]
+        CardHooks --> useBookmark[useBookmark]
+        CardHooks --> useCardInteraction[useCardInteraction]
+        CardHooks --> useCardFilter[useCardFilter]
+        CardHooks --> useCardGrid[useCardGrid]
+        CardHooks --> useCardAnimation[useCardAnimation]
+    end
+
+    subgraph "Performance Layer"
+        MF2 --> PerformanceHOCs[Performance HOCs]
+        PerformanceHOCs --> withMemo[withMemo]
+        PerformanceHOCs --> withPerformanceMonitoring[withPerformanceMonitoring]
+        PerformanceHOCs --> withMobileOptimization[withMobileOptimization]
+        PerformanceHOCs --> withErrorBoundary[withErrorBoundary]
+        PerformanceHOCs --> composeHOCs[composeHOCs]
     end
 
     subgraph "Utility Layer"
-        Card --> PO[Performance Optimization]
-        OI --> IO[Image Optimization]
+        Card --> CardHooks
         AC --> A11Y[Accessibility Utils]
-        OC --> OM[Offline Manager]
-        
-        PO --> MC[Memory Cache]
-        PO --> NO[Network Optimizer]
-        PO --> PM[Performance Monitor]
+        OC --> OfflineHooks[Offline Custom Hooks]
+        OfflineHooks --> useOfflineStatus[useOfflineStatus]
+        OfflineHooks --> useOfflineContent[useOfflineContent]
+        OfflineHooks --> useStorageUsage[useStorageUsage]
+        OfflineHooks --> useOfflinePreferences[useOfflinePreferences]
+        OfflineHooks --> useContentCaching[useContentCaching]
+        OfflineHooks --> useSyncOperations[useSyncOperations]
+        OfflineHooks --> useDatabaseOperations[useDatabaseOperations]
         
         A11Y --> AH[Aria Helpers]
         A11Y --> KN[Keyboard Navigator]
         A11Y --> FM[Focus Manager]
         A11Y --> AT[Accessibility Tester]
         
+        OfflineHooks --> OM[Offline Manager]
         OM --> IDB[IndexedDB]
         OM --> SW[Service Worker]
         OM --> LS[LocalStorage]
     end
 
+    subgraph "Internationalization Layer"
+        i18n[i18next Configuration]
+        i18n --> LanguageDetector[Language Detector]
+        i18n --> TranslationFiles[Translation Files]
+        TranslationFiles --> EN[en.json]
+        TranslationFiles --> ES[es.json]
+        TranslationFiles --> FR[fr.json]
+        TranslationFiles --> DE[de.json]
+        TranslationFiles --> IT[it.json]
+        TranslationFiles --> PT[pt.json]
+        TranslationFiles --> JA[ja.json]
+        TranslationFiles --> ZH[zh.json]
+        TranslationFiles --> AR[ar.json]
+        TranslationFiles --> HI[hi.json]
+        
+        Nav --> i18n
+        LS --> i18n
+        MF1 --> i18n
+        MF2 --> i18n
+        MF3 --> i18n
+        MF4 --> i18n
+    end
+
     subgraph "Infrastructure Layer"
-        IO --> React[React 18]
-        PO --> TypeScript[TypeScript]
+        CardHooks --> React[React 18]
+        PerformanceHOCs --> TypeScript[TypeScript]
         A11Y --> Tailwind[Tailwind CSS]
-        OM --> i18n[i18next]
+        OfflineHooks --> React
         
         React --> Webpack[Webpack]
         TypeScript --> Webpack
         Tailwind --> PostCSS[PostCSS]
-        i18n --> JSON[JSON Translation Files]
     end
 
     subgraph "External Services"
         SW --> API[F1 API]
-        NO --> API
-        PM --> Analytics[Analytics]
+        PerformanceHOCs --> Analytics[Performance Analytics]
     end
 
     subgraph "Browser APIs"
         IDB --> Browser[Browser Storage APIs]
         SW --> Browser
         LS --> Browser
-        OI --> IntersectionObserver[Intersection Observer]
+        CardHooks --> IntersectionObserver[Intersection Observer]
         A11Y --> ScreenReader[Screen Reader APIs]
     end
 ```
@@ -95,23 +133,28 @@ flowchart TD
 
     subgraph "Data Management"
         State --> LocalState[Local State - useState]
-        State --> SharedState[Shared State - Context]
+        State --> SharedState[Shared State - Custom Hooks]
         State --> PersistentState[Persistent State - IndexedDB]
         State --> CacheState[Cache State - MemoryCache]
     end
 
     subgraph "Performance Optimization"
-        LocalState --> PerformanceMonitor[Performance Monitor]
-        SharedState --> NetworkOptimizer[Network Optimizer]
-        PersistentState --> OfflineManager[Offline Manager]
-        CacheState --> MemoryCache[Memory Cache]
+        LocalState --> PerformanceHOCs[Performance HOCs]
+        SharedState --> CustomHooks[Custom Hooks]
+        PersistentState --> OfflineHooks[Offline Hooks]
+        CacheState --> CardHooks[Card Hooks]
+        
+        PerformanceHOCs --> withMemo[withMemo]
+        PerformanceHOCs --> withPerformanceMonitoring[withPerformanceMonitoring]
+        PerformanceHOCs --> withMobileOptimization[withMobileOptimization]
+        PerformanceHOCs --> withErrorBoundary[withErrorBoundary]
     end
 
     subgraph "Accessibility"
         Event --> KeyboardNavigator[Keyboard Navigator]
         State --> FocusManager[Focus Manager]
         Render --> ScreenReader[Screen Reader Support]
-        PerformanceMonitor --> AccessibilityTester[Accessibility Tester]
+        PerformanceHOCs --> AccessibilityTester[Accessibility Tester]
     end
 
     subgraph "Internationalization"
@@ -121,6 +164,7 @@ flowchart TD
     end
 
     subgraph "Offline Capability"
+        OfflineHooks --> OfflineManager[Offline Manager]
         OfflineManager --> ServiceWorker[Service Worker]
         ServiceWorker --> IndexedDB[IndexedDB]
         IndexedDB --> LocalStorage[LocalStorage]
@@ -136,20 +180,21 @@ graph TD
     end
 
     subgraph "Global Components"
-        App --> Navigation[Navigation.tsx]
+        App --> Navigation[Navigation.tsx with i18n]
+        App --> LanguageSelector[LanguageSelector.tsx]
         App --> AccessibilityControls[AccessibilityControls.tsx]
-        App --> OfflineControls[OfflineControls.tsx]
+        App --> OfflineControls[OfflineControls.tsx with Offline Hooks]
     end
 
     subgraph "Microfrontends"
-        App --> Dashboard[Dashboard.tsx]
-        App --> Drivers[Drivers.tsx]
-        App --> News[News.tsx]
-        App --> Bookmarks[Bookmarks.tsx]
+        App --> Dashboard[Dashboard.tsx with Enhanced Card]
+        App --> Drivers[Drivers.tsx with Performance HOCs + Enhanced Card]
+        App --> News[News.tsx with Enhanced Card + Pagination]
+        App --> Bookmarks[Bookmarks.tsx with Enhanced Card]
     end
 
     subgraph "Shared Components"
-        Dashboard --> Card[Card.tsx]
+        Dashboard --> Card[Enhanced Card.tsx]
         Drivers --> Card
         News --> Card
         Bookmarks --> Card
@@ -158,16 +203,40 @@ graph TD
         Drivers --> ShimmerUI
         News --> ShimmerUI
         Bookmarks --> ShimmerUI
-        
-        Drivers --> OptimizedImage[OptimizedImage.tsx]
-        News --> OptimizedImage
     end
 
-    subgraph "Utility Dependencies"
-        Card --> PerformanceOptimization[performanceOptimization.ts]
-        OptimizedImage --> ImageOptimization[imageOptimization.ts]
-        AccessibilityControls --> Accessibility[accessibility.ts]
-        OfflineControls --> OfflineManager[offlineManager.ts]
+    subgraph "Custom Hooks Layer"
+        Card --> CardHooks[cardHooks.ts]
+        CardHooks --> useBookmark[useBookmark]
+        CardHooks --> useCardInteraction[useCardInteraction]
+        CardHooks --> useCardFilter[useCardFilter]
+        CardHooks --> useCardGrid[useCardGrid]
+        CardHooks --> useCardAnimation[useCardAnimation]
+        
+        OfflineControls --> OfflineHooks[offlineHooks.ts]
+        OfflineHooks --> useOfflineStatus[useOfflineStatus]
+        OfflineHooks --> useOfflineContent[useOfflineContent]
+        OfflineHooks --> useStorageUsage[useStorageUsage]
+        OfflineHooks --> useOfflinePreferences[useOfflinePreferences]
+        OfflineHooks --> useContentCaching[useContentCaching]
+        OfflineHooks --> useSyncOperations[useSyncOperations]
+        OfflineHooks --> useDatabaseOperations[useDatabaseOperations]
+    end
+
+    subgraph "Performance & Utility Layer"
+        Drivers --> PerformanceHOCs[performanceHOCs.tsx]
+        PerformanceHOCs --> withMemo[withMemo]
+        PerformanceHOCs --> withPerformanceMonitoring[withPerformanceMonitoring]
+        PerformanceHOCs --> withMobileOptimization[withMobileOptimization]
+        PerformanceHOCs --> withErrorBoundary[withErrorBoundary]
+        PerformanceHOCs --> composeHOCs[composeHOCs]
+        
+        OfflineHooks --> OfflineManager[offlineManager.ts]
+        OfflineManager --> IndexedDB[IndexedDB]
+        OfflineManager --> ServiceWorker[Service Worker]
+        
+        Navigation --> i18n[i18n Configuration]
+        i18n --> TranslationFiles[Translation Files]
     end
 ```
 
@@ -180,7 +249,8 @@ stateDiagram-v2
     AppInitialization --> ServiceWorkerRegistration
     ServiceWorkerRegistration --> OfflineManagerInit
     OfflineManagerInit --> IndexedDBSetup
-    IndexedDBSetup --> AppReady
+    IndexedDBSetup --> i18nInit[i18n Initialization]
+    i18nInit --> AppReady
     
     AppReady --> UserInteraction
     UserInteraction --> StateUpdate
@@ -189,7 +259,8 @@ stateDiagram-v2
     
     state UserInteraction {
         [*] --> Navigation
-        Navigation --> PageLoad
+        Navigation --> LanguageSelection[Language Selection]
+        LanguageSelection --> PageLoad
         PageLoad --> DataFetching
         DataFetching --> ContentDisplay
         ContentDisplay --> UserAction
@@ -198,14 +269,15 @@ stateDiagram-v2
     
     state StateUpdate {
         [*] --> LocalState
-        LocalState --> SharedState
-        SharedState --> PersistentState
+        LocalState --> CustomHooks[Custom Hooks State]
+        CustomHooks --> PersistentState
         PersistentState --> CacheState
         CacheState --> [*]
     }
     
     state ComponentReRender {
-        [*] --> VirtualDOM
+        [*] --> PerformanceHOCs[Performance HOCs]
+        PerformanceHOCs --> VirtualDOM
         VirtualDOM --> Diffing
         Diffing --> DOMUpdate
         DOMUpdate --> AccessibilityCheck
@@ -223,19 +295,28 @@ flowchart LR
         LazyLoad --> Component[Component Load]
     end
 
+    subgraph "Performance HOCs"
+        Component --> PerformanceHOCs[Performance HOCs]
+        PerformanceHOCs --> withMemo[withMemo - Memoization]
+        PerformanceHOCs --> withPerformanceMonitoring[withPerformanceMonitoring]
+        PerformanceHOCs --> withMobileOptimization[withMobileOptimization]
+        PerformanceHOCs --> withErrorBoundary[withErrorBoundary]
+    end
+
+    subgraph "Custom Hooks Optimization"
+        Component --> CardHooks[Card Custom Hooks]
+        CardHooks --> useBookmark[useBookmark - State Management]
+        CardHooks --> useCardInteraction[useCardInteraction - Interactions]
+        CardHooks --> useCardFilter[useCardFilter - Filtering]
+        CardHooks --> useCardGrid[useCardGrid - Pagination]
+        CardHooks --> useCardAnimation[useCardAnimation - Animations]
+    end
+
     subgraph "Caching Strategy"
         Component --> MemoryCache[Memory Cache]
         MemoryCache --> ServiceWorkerCache[Service Worker Cache]
         ServiceWorkerCache --> IndexedDBCache[IndexedDB Cache]
         IndexedDBCache --> NetworkRequest[Network Request]
-    end
-
-    subgraph "Image Optimization"
-        Component --> ImageRequest[Image Request]
-        ImageRequest --> FormatDetection[Format Detection]
-        FormatDetection --> ResponsiveSizing[Responsive Sizing]
-        ResponsiveSizing --> LazyLoading[Lazy Loading]
-        LazyLoading --> ProgressiveLoad[Progressive Loading]
     end
 
     subgraph "Performance Monitoring"
@@ -245,52 +326,67 @@ flowchart LR
     end
 ```
 
-## Accessibility Architecture
+## Enhanced Card Component Architecture
 
 ```mermaid
 graph TB
-    subgraph "Accessibility Layer"
-        A11Y[Accessibility Controls]
-        A11Y --> HighContrast[High Contrast Mode]
-        A11Y --> ReducedMotion[Reduced Motion]
-        A11Y --> FontSize[Font Size Control]
-        A11Y --> KeyboardNav[Keyboard Navigation]
+    subgraph "Card Component"
+        Card[Enhanced Card.tsx]
+        Card --> Variants[Variants: default, elevated, outlined, filled]
+        Card --> Sizes[Sizes: sm, md, lg]
+        Card --> Props[Enhanced Props: id, variant, size, disabled, loading, selected]
+        Card --> Accessibility[Accessibility: role, tabIndex, aria-*]
     end
 
-    subgraph "ARIA Implementation"
-        HighContrast --> ARIA[ARIA Attributes]
-        ReducedMotion --> ARIA
-        FontSize --> ARIA
-        KeyboardNav --> ARIA
-        
-        ARIA --> SemanticHTML[Semantic HTML]
-        ARIA --> ScreenReader[Screen Reader Support]
-        ARIA --> FocusManagement[Focus Management]
+    subgraph "Card Custom Hooks"
+        Card --> CardHooks[cardHooks.ts]
+        CardHooks --> useBookmark[useBookmark]
+        CardHooks --> useCardInteraction[useCardInteraction]
+        CardHooks --> useCardFilter[useCardFilter]
+        CardHooks --> useCardGrid[useCardGrid]
+        CardHooks --> useCardAnimation[useCardAnimation]
     end
 
-    subgraph "Testing & Compliance"
-        SemanticHTML --> AccessibilityTester[Accessibility Tester]
-        ScreenReader --> AccessibilityTester
-        FocusManagement --> AccessibilityTester
-        
-        AccessibilityTester --> WCAG[WCAG 2.1 AAA]
-        WCAG --> Compliance[Compliance Report]
+    subgraph "Card Usage in Microfrontends"
+        Card --> DashboardUsage[Dashboard - Quick Stats, Season Progress]
+        Card --> DriversUsage[Drivers - Driver Profiles, Team Filtering]
+        Card --> NewsUsage[News - Articles, Pagination, Categories]
+        Card --> BookmarksUsage[Bookmarks - Saved Content Display]
+    end
+
+    subgraph "Card Features"
+        Variants --> Styling[Conditional Styling]
+        Sizes --> Responsive[Responsive Design]
+        Props --> States[Multiple States]
+        Accessibility --> ScreenReader[Screen Reader Support]
     end
 ```
 
-## Offline Architecture
+## Offline Architecture with Custom Hooks
 
 ```mermaid
 graph TB
+    subgraph "Offline Custom Hooks"
+        OfflineHooks[offlineHooks.ts]
+        OfflineHooks --> useOfflineStatus[useOfflineStatus]
+        OfflineHooks --> useOfflineContent[useOfflineContent]
+        OfflineHooks --> useStorageUsage[useStorageUsage]
+        OfflineHooks --> useOfflinePreferences[useOfflinePreferences]
+        OfflineHooks --> useContentCaching[useContentCaching]
+        OfflineHooks --> useSyncOperations[useSyncOperations]
+        OfflineHooks --> useDatabaseOperations[useDatabaseOperations]
+    end
+
     subgraph "Offline Manager"
-        OM[Offline Manager]
-        OM --> NetworkDetection[Network Detection]
-        OM --> StorageManagement[Storage Management]
-        OM --> SyncManagement[Sync Management]
+        OfflineManager[offlineManager.ts]
+        OfflineManager --> NetworkDetection[Network Detection]
+        OfflineManager --> StorageManagement[Storage Management]
+        OfflineManager --> SyncManagement[Sync Management]
+        OfflineManager --> PreferencesManagement[Preferences Management]
     end
 
     subgraph "Storage Layer"
-        StorageManagement --> IndexedDB[IndexedDB]
+        StorageManagement --> IndexedDB[IndexedDB v3]
         StorageManagement --> LocalStorage[LocalStorage]
         StorageManagement --> ServiceWorkerCache[Service Worker Cache]
     end
@@ -299,6 +395,7 @@ graph TB
         SyncManagement --> BackgroundSync[Background Sync]
         SyncManagement --> ConflictResolution[Conflict Resolution]
         SyncManagement --> DataVersioning[Data Versioning]
+        SyncManagement --> AutoSync[Auto Sync with Preferences]
     end
 
     subgraph "Offline Features"
@@ -309,6 +406,10 @@ graph TB
         BackgroundSync --> DataSync[Data Synchronization]
         DataSync --> ConflictResolution
         ConflictResolution --> DataVersioning
+        
+        PreferencesManagement --> UserPreferences[User Preferences]
+        UserPreferences --> ContentTypes[Content Type Preferences]
+        UserPreferences --> SyncIntervals[Sync Intervals]
     end
 ```
 
@@ -324,22 +425,70 @@ flowchart LR
     end
 
     subgraph "Translation Files"
-        Backend --> EN[en.json]
-        Backend --> ES[es.json]
-        Backend --> FR[fr.json]
-        Backend --> DE[de.json]
-        Backend --> IT[it.json]
-        Backend --> PT[pt.json]
-        Backend --> JA[ja.json]
-        Backend --> ZH[zh.json]
-        Backend --> AR[ar.json]
-        Backend --> HI[hi.json]
+        Backend --> EN[en.json - English]
+        Backend --> ES[es.json - Spanish]
+        Backend --> FR[fr.json - French]
+        Backend --> DE[de.json - German]
+        Backend --> IT[it.json - Italian]
+        Backend --> PT[pt.json - Portuguese]
+        Backend --> JA[ja.json - Japanese]
+        Backend --> ZH[zh.json - Chinese]
+        Backend --> AR[ar.json - Arabic]
+        Backend --> HI[hi.json - Hindi]
     end
 
     subgraph "Component Integration"
         ReactI18n --> useTranslation[useTranslation Hook]
         useTranslation --> Component[Component]
         Component --> TranslatedText[Translated Text]
+        
+        useTranslation --> Navigation[Navigation]
+        useTranslation --> LanguageSelector[Language Selector]
+        useTranslation --> Dashboard[Dashboard]
+        useTranslation --> Drivers[Drivers]
+        useTranslation --> News[News]
+        useTranslation --> Bookmarks[Bookmarks]
+    end
+
+    subgraph "Language Features"
+        LanguageDetector --> AutoDetection[Auto Language Detection]
+        LanguageDetector --> Fallback[Fallback Language]
+        LanguageDetector --> Persistence[Language Persistence]
+    end
+```
+
+## Performance HOCs Architecture
+
+```mermaid
+graph TB
+    subgraph "Performance HOCs"
+        PerformanceHOCs[performanceHOCs.tsx]
+        PerformanceHOCs --> withMemo[withMemo]
+        PerformanceHOCs --> withPerformanceMonitoring[withPerformanceMonitoring]
+        PerformanceHOCs --> withMobileOptimization[withMobileOptimization]
+        PerformanceHOCs --> withErrorBoundary[withErrorBoundary]
+        PerformanceHOCs --> composeHOCs[composeHOCs]
+    end
+
+    subgraph "HOC Functions"
+        withMemo --> Memoization[React.memo Implementation]
+        withPerformanceMonitoring --> Metrics[Performance Metrics Collection]
+        withMobileOptimization --> MobileOpts[Mobile-Specific Optimizations]
+        withErrorBoundary --> ErrorHandling[Error Boundary Wrapper]
+        composeHOCs --> HOCComposition[HOC Composition Utility]
+    end
+
+    subgraph "HOC Usage"
+        PerformanceHOCs --> Drivers[Drivers Microfrontend]
+        Drivers --> HOCComposition
+        HOCComposition --> OptimizedDrivers[Optimized Drivers Component]
+    end
+
+    subgraph "Performance Benefits"
+        Memoization --> ReducedRenders[Reduced Re-renders]
+        Metrics --> PerformanceTracking[Performance Tracking]
+        MobileOpts --> MobilePerformance[Mobile Performance]
+        ErrorHandling --> ErrorRecovery[Error Recovery]
     end
 ```
 
@@ -365,6 +514,12 @@ graph TB
         SecureAPI --> TokenAuth[Token Authentication]
         TokenAuth --> EncryptedData[Encrypted Data Transfer]
     end
+
+    subgraph "Offline Security"
+        SecureStorage --> IndexedDB[IndexedDB Security]
+        IndexedDB --> DataEncryption[Data Encryption]
+        DataEncryption --> AccessControl[Access Control]
+    end
 ```
 
 ## Deployment Architecture
@@ -377,10 +532,12 @@ graph TB
         TypeScript --> Webpack[Webpack Bundling]
         Webpack --> CodeSplitting[Code Splitting]
         CodeSplitting --> AssetOptimization[Asset Optimization]
+        AssetOptimization --> PerformanceHOCs[Performance HOCs]
+        PerformanceHOCs --> CustomHooks[Custom Hooks]
     end
 
     subgraph "Deployment Pipeline"
-        AssetOptimization --> StaticBuild[Static Build]
+        CustomHooks --> StaticBuild[Static Build]
         StaticBuild --> CDN[CDN Deployment]
         CDN --> LoadBalancer[Load Balancer]
         LoadBalancer --> User[End User]
@@ -391,6 +548,12 @@ graph TB
         IndependentDeploy --> VersionControl[Version Control]
         VersionControl --> Rollback[Rollback Strategy]
     end
+
+    subgraph "Performance Monitoring"
+        PerformanceHOCs --> PerformanceMetrics[Performance Metrics]
+        PerformanceMetrics --> Analytics[Analytics Dashboard]
+        Analytics --> Optimization[Continuous Optimization]
+    end
 ```
 
 ## Key Architectural Benefits
@@ -399,41 +562,62 @@ graph TB
 - Clear boundaries between layers
 - Single responsibility principle
 - Modular and testable components
+- Custom hooks for specific functionality
 
 ### 2. **Maintainability**
 - TypeScript for type safety
 - Consistent coding patterns
 - Comprehensive documentation
 - Clear component hierarchy
+- Reusable custom hooks
 
 ### 3. **Extensibility**
-- Plugin architecture
+- Plugin architecture with HOCs
 - Configuration-driven features
 - API-ready design
 - Third-party integration support
+- Custom hook composition
 
 ### 4. **Scalability**
 - Microfrontend architecture
 - Lazy loading and code splitting
-- Performance optimization
+- Performance optimization with HOCs
 - Caching strategies
+- Custom hooks for state management
 
 ### 5. **Accessibility**
 - AAA-level compliance
 - Universal design principles
 - Screen reader support
 - Keyboard navigation
+- ARIA implementation
 
 ### 6. **Performance**
 - Multi-layer caching
-- Image optimization
+- Performance HOCs for optimization
+- Custom hooks for efficient state management
 - Progressive loading
-- Performance monitoring
+- Performance monitoring and metrics
 
 ### 7. **Offline Capability**
 - Progressive Web App features
 - Service Worker integration
 - IndexedDB for data persistence
 - Background sync capabilities
+- Custom hooks for offline management
 
-This architecture provides a robust foundation for a high-traffic, feature-rich F1 racing application that can scale with user growth while maintaining excellent performance, accessibility, and user experience standards.
+### 8. **Internationalization**
+- 10-language support
+- Automatic language detection
+- Fallback language support
+- Component-level translation
+- Language persistence
+
+### 9. **Component Architecture**
+- Enhanced Card component with variants
+- Custom hooks for Card functionality
+- Flexible prop system
+- Accessibility features
+- Performance optimization
+
+This architecture provides a robust foundation for a high-traffic, feature-rich F1 racing application that can scale with user growth while maintaining excellent performance, accessibility, and user experience standards. The integration of performance HOCs, custom hooks, and enhanced components creates a maintainable and extensible codebase.
