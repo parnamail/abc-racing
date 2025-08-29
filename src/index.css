@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    /* Mobile-first base font size */
+    font-size: 16px;
+    /* Smooth scrolling for better mobile experience */
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    /* Better touch targets */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Progressive enhancement for larger screens */
+  @media (min-width: 768px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 20px;
+    }
+  }
+}
+
+@layer components {
+  /* Mobile-first card component */
+  .card {
+    @apply bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-all duration-300;
+    /* Better touch interaction on mobile */
+    @apply active:scale-95 sm:active:scale-100;
+  }
+  
+  .card-header {
+    @apply text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4;
+  }
+  
+  /* Mobile-first button components */
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 sm:py-2 sm:px-4 rounded-md transition-all duration-200;
+    /* Larger touch targets on mobile */
+    @apply min-h-[44px] sm:min-h-0;
+    /* Better focus states for accessibility */
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 sm:py-2 sm:px-4 rounded-md transition-all duration-200;
+    @apply min-h-[44px] sm:min-h-0;
+    @apply focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  }
+
+  /* Mobile-first input styles */
+  .input-field {
+    @apply w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    @apply text-base sm:text-sm;
+    /* Better mobile input experience */
+    @apply appearance-none;
+  }
+
+  /* Mobile-first grid layouts */
+  .responsive-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .responsive-grid-2 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+  }
+
+  /* Mobile-first spacing utilities */
+  .mobile-padding {
+    @apply px-4 py-6 sm:px-6 sm:py-8 lg:px-8;
+  }
+
+  /* Progressive enhancement for animations */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-on-scroll {
+      @apply transition-all duration-500 ease-out;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .card {
+      @apply border-2 border-gray-800;
+    }
+    
+    .btn-primary {
+      @apply border-2 border-primary-800;
+    }
+  }
+
+  /* Dark mode support (future enhancement) */
+  @media (prefers-color-scheme: dark) {
+    /* Dark mode styles can be added here */
+  }
+}
+
+@layer utilities {
+  /* Mobile-first text utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  .text-responsive-lg {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+
+  /* Mobile-first spacing utilities */
+  .space-responsive {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+
+  /* Touch-friendly interactive elements */
+  .touch-friendly {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+}
