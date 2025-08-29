@@ -38,9 +38,18 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div 
+        className="min-h-screen bg-gray-50"
+        role="application"
+        aria-label="ABC Racing Formula 1 Application"
+      >
         <Navigation />
-        <main id="main-content" role="main" className="pt-16">
+        <main 
+          id="main-content" 
+          role="main" 
+          className="pt-16"
+          aria-label="Main content area"
+        >
           <Suspense fallback={<MicrofrontendLoader />}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -54,6 +63,14 @@ const App: React.FC = () => {
         {/* Accessibility and Offline Controls */}
         <AccessibilityControls />
         <OfflineControls />
+        
+        {/* Skip links for keyboard navigation */}
+        <a href="#main-content" className="skip-link sr-only focus:not-sr-only">
+          Skip to main content
+        </a>
+        <a href="#navigation" className="skip-link sr-only focus:not-sr-only">
+          Skip to navigation
+        </a>
       </div>
     </Router>
   );

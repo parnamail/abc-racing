@@ -6,6 +6,41 @@ export interface AccessibilityConfig {
   enableKeyboardNavigation: boolean;
   enableFocusIndicators: boolean;
   enableSkipLinks: boolean;
+  enableLargeText: boolean;
+  enableDyslexiaFriendly: boolean;
+  enableColorBlindSupport: boolean;
+  enableVoiceControl: boolean;
+}
+
+// WCAG 2.1 AAA Level Requirements
+export const WCAG_AAA_REQUIREMENTS = {
+  // Color Contrast Ratios
+  CONTRAST_RATIOS: {
+    NORMAL_TEXT: 7.0,      // AAA level for normal text
+    LARGE_TEXT: 4.5,       // AAA level for large text (18pt+ or 14pt+ bold)
+    UI_COMPONENTS: 3.0,    // AAA level for UI components and graphics
+  },
+  
+  // Text sizing
+  MIN_FONT_SIZE: 16,       // Minimum font size in pixels
+  LINE_HEIGHT: 1.5,        // Minimum line height ratio
+  
+  // Focus indicators
+  FOCUS_INDICATOR_WIDTH: 3, // Minimum focus indicator width in pixels
+  FOCUS_INDICATOR_COLOR: '#2563eb', // High contrast focus color
+  
+  // Animation and motion
+  MAX_ANIMATION_DURATION: 500, // Maximum animation duration in milliseconds
+  REDUCED_MOTION_THRESHOLD: 200, // Threshold for reduced motion
+  
+  // Keyboard navigation
+  TAB_ORDER_LOGICAL: true,  // Ensure logical tab order
+  KEYBOARD_SHORTCUTS: true, // Provide keyboard shortcuts
+  
+  // Screen reader support
+  ARIA_LABELS_REQUIRED: true, // All interactive elements need labels
+  SEMANTIC_HTML: true,      // Use semantic HTML elements
+  HEADING_HIERARCHY: true,  // Proper heading structure
 }
 
 // ARIA helpers for semantic markup
@@ -17,29 +52,44 @@ export const ariaHelpers = {
   contentinfo: { role: 'contentinfo', 'aria-label': 'Site footer' },
   complementary: { role: 'complementary', 'aria-label': 'Additional information' },
   search: { role: 'search', 'aria-label': 'Search functionality' },
+  region: (name: string) => ({ role: 'region', 'aria-label': name }),
 
   // Form labels and descriptions
   label: (id: string, text: string) => ({ htmlFor: id, id: `${id}-label` }),
   describedBy: (id: string) => ({ 'aria-describedby': `${id}-description` }),
   required: { 'aria-required': 'true' },
   invalid: (id: string) => ({ 'aria-invalid': 'true', 'aria-describedby': `${id}-error` }),
+  error: (id: string, message: string) => ({ 
+    id: `${id}-error`, 
+    role: 'alert', 
+    'aria-live': 'assertive',
+    'aria-atomic': 'true'
+  }),
 
   // Interactive elements
-  button: (pressed?: boolean) => ({ 
+  button: (pressed?: boolean, expanded?: boolean) => ({ 
     role: 'button', 
     tabIndex: 0,
-    ...(pressed !== undefined && { 'aria-pressed': pressed.toString() })
+    ...(pressed !== undefined && { 'aria-pressed': pressed.toString() }),
+    ...(expanded !== undefined && { 'aria-expanded': expanded.toString() })
   }),
-  tab: (selected: boolean, controls: string) => ({
+  tab: (selected: boolean, controls: string, id: string) => ({
     role: 'tab',
+    id: id,
     'aria-selected': selected.toString(),
     'aria-controls': controls,
     tabIndex: selected ? 0 : -1
   }),
-  tabpanel: (labelledBy: string) => ({
+  tabpanel: (labelledBy: string, id: string) => ({
     role: 'tabpanel',
+    id: id,
     'aria-labelledby': labelledBy,
     tabIndex: 0
+  }),
+  tablist: (id: string, orientation: 'horizontal' | 'vertical' = 'horizontal') => ({
+    role: 'tablist',
+    id: id,
+    'aria-orientation': orientation
   }),
 
   // Lists and navigation
@@ -47,10 +97,12 @@ export const ariaHelpers = {
   listItem: { role: 'listitem' },
   menu: { role: 'menu' },
   menuitem: { role: 'menuitem', tabIndex: -1 },
+  menubar: { role: 'menubar' },
 
   // Status and live regions
   status: { role: 'status', 'aria-live': 'polite' },
   alert: { role: 'alert', 'aria-live': 'assertive' },
+  log: { role: 'log', 'aria-live': 'polite' },
   progressbar: (value: number, min: number = 0, max: number = 100) => ({
     role: 'progressbar',
     'aria-valuenow': value.toString(),
@@ -90,6 +142,44 @@ export const ariaHelpers = {
     href: target,
     className: 'skip-link',
     'aria-label': `Skip to ${text}`
+  }),
+
+  // Dialog and modal
+  dialog: (id: string, labelledBy: string) => ({
+    role: 'dialog',
+    id: id,
+    'aria-labelledby': labelledBy,
+    'aria-modal': 'true'
+  }),
+
+  // Tooltip
+  tooltip: (id: string, describedBy: string) => ({
+    role: 'tooltip',
+    id: id,
+    'aria-describedby': describedBy
+  }),
+
+  // Combobox
+  combobox: (id: string, expanded: boolean, controls: string) => ({
+    role: 'combobox',
+    id: id,
+    'aria-expanded': expanded.toString(),
+    'aria-controls': controls,
+    'aria-autocomplete': 'list'
+  }),
+
+  // Listbox
+  listbox: (id: string, multiSelect: boolean = false) => ({
+    role: 'listbox',
+    id: id,
+    'aria-multiselectable': multiSelect.toString()
+  }),
+
+  // Option
+  option: (selected: boolean, id: string) => ({
+    role: 'option',
+    id: id,
+    'aria-selected': selected.toString()
   })
 };
 
@@ -360,13 +450,17 @@ export class ScreenReaderSupport {
   }
 }
 
-// Accessibility testing utilities
+// Accessibility testing utilities - AAA Level Compliance
 export class AccessibilityTester {
-  // Check color contrast ratio
+  // Enhanced color contrast ratio calculation for AAA compliance
   static checkColorContrast(foreground: string, background: string): number {
-    // Simplified contrast calculation
     const getLuminance = (color: string): number => {
-      const hex = color.replace('#', '');
+      // Handle different color formats
+      let hex = color.replace('#', '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      
       const r = parseInt(hex.substr(0, 2), 16) / 255;
       const g = parseInt(hex.substr(2, 2), 16) / 255;
       const b = parseInt(hex.substr(4, 2), 16) / 255;
@@ -386,6 +480,47 @@ export class AccessibilityTester {
     const darker = Math.min(l1, l2);
     
     return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  // Check if contrast ratio meets AAA standards
+  static isAAACompliant(contrastRatio: number, textSize: 'normal' | 'large' = 'normal'): boolean {
+    const requiredRatio = textSize === 'large' 
+      ? WCAG_AAA_REQUIREMENTS.CONTRAST_RATIOS.LARGE_TEXT 
+      : WCAG_AAA_REQUIREMENTS.CONTRAST_RATIOS.NORMAL_TEXT;
+    
+    return contrastRatio >= requiredRatio;
+  }
+
+  // Comprehensive color contrast testing
+  static checkAllColorContrasts(): Array<{element: HTMLElement, ratio: number, compliant: boolean, textSize: 'normal' | 'large'}> {
+    const results: Array<{element: HTMLElement, ratio: number, compliant: boolean, textSize: 'normal' | 'large'}> = [];
+    
+    // Check all text elements
+    const textElements = document.querySelectorAll('p, span, div, h1, h2, h3, h4, h5, h6, a, button, label, input, textarea');
+    
+    textElements.forEach(element => {
+      const computedStyle = window.getComputedStyle(element);
+      const color = computedStyle.color;
+      const backgroundColor = computedStyle.backgroundColor;
+      const fontSize = parseFloat(computedStyle.fontSize);
+      const fontWeight = computedStyle.fontWeight;
+      
+      // Determine if text is large (18pt+ or 14pt+ bold)
+      const isLargeText = fontSize >= 18 || (fontSize >= 14 && parseInt(fontWeight) >= 700);
+      const textSize: 'normal' | 'large' = isLargeText ? 'large' : 'normal';
+      
+      const ratio = this.checkColorContrast(color, backgroundColor);
+      const compliant = this.isAAACompliant(ratio, textSize);
+      
+      results.push({
+        element: element as HTMLElement,
+        ratio,
+        compliant,
+        textSize
+      });
+    });
+    
+    return results;
   }
 
   // Validate ARIA attributes
@@ -467,6 +602,276 @@ export class AccessibilityTester {
     });
     
     return errors;
+  }
+
+  // Check for proper focus indicators
+  static checkFocusIndicators(): string[] {
+    const errors: string[] = [];
+    const focusableElements = document.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    
+    focusableElements.forEach(element => {
+      const computedStyle = window.getComputedStyle(element);
+      const outline = computedStyle.outline;
+      const boxShadow = computedStyle.boxShadow;
+      
+      if (outline === 'none' && !boxShadow.includes('rgb')) {
+        errors.push(`Focus indicator missing for ${element.tagName} element`);
+      }
+    });
+    
+    return errors;
+  }
+
+  // Check for proper form labels
+  static checkFormLabels(): string[] {
+    const errors: string[] = [];
+    const formControls = document.querySelectorAll('input, select, textarea');
+    
+    formControls.forEach(control => {
+      const id = control.getAttribute('id');
+      const ariaLabel = control.getAttribute('aria-label');
+      const ariaLabelledBy = control.getAttribute('aria-labelledby');
+      const placeholder = control.getAttribute('placeholder');
+      
+      if (!id && !ariaLabel && !ariaLabelledBy && !placeholder) {
+        errors.push(`Form control ${control.tagName} missing accessible label`);
+      }
+    });
+    
+    return errors;
+  }
+
+  // Check for proper language attributes
+  static checkLanguageAttributes(): string[] {
+    const errors: string[] = [];
+    const html = document.documentElement;
+    const lang = html.getAttribute('lang');
+    
+    if (!lang) {
+      errors.push('HTML element missing lang attribute');
+    }
+    
+    // Check for language changes in content
+    const elementsWithLang = document.querySelectorAll('[lang]');
+    elementsWithLang.forEach(element => {
+      const langValue = element.getAttribute('lang');
+      if (!langValue || langValue.length < 2) {
+        errors.push('Invalid lang attribute value');
+      }
+    });
+    
+    return errors;
+  }
+
+  // Check for proper skip links
+  static checkSkipLinks(): string[] {
+    const errors: string[] = [];
+    const skipLinks = document.querySelectorAll('.skip-link, [href^="#"]');
+    
+    if (skipLinks.length === 0) {
+      errors.push('No skip links found for keyboard navigation');
+    }
+    
+    skipLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const target = document.querySelector(href || '');
+      
+      if (!target) {
+        errors.push(`Skip link target not found: ${href}`);
+      }
+    });
+    
+    return errors;
+  }
+
+  // Check for proper ARIA landmarks
+  static checkAriaLandmarks(): string[] {
+    const errors: string[] = [];
+    const landmarks = document.querySelectorAll('[role="banner"], [role="main"], [role="navigation"], [role="complementary"], [role="contentinfo"]');
+    
+    // Check for duplicate landmarks
+    const landmarkTypes = Array.from(landmarks).map(el => el.getAttribute('role'));
+    const duplicates = landmarkTypes.filter((type, index) => landmarkTypes.indexOf(type) !== index);
+    
+    if (duplicates.length > 0) {
+      errors.push(`Duplicate landmarks found: ${duplicates.join(', ')}`);
+    }
+    
+    // Check for missing main landmark
+    const mainLandmark = document.querySelector('[role="main"]');
+    if (!mainLandmark) {
+      errors.push('Missing main landmark');
+    }
+    
+    return errors;
+  }
+
+  // Check for proper table structure
+  static checkTableStructure(): string[] {
+    const errors: string[] = [];
+    const tables = document.querySelectorAll('table');
+    
+    tables.forEach(table => {
+      const headers = table.querySelectorAll('th');
+      const caption = table.querySelector('caption');
+      
+      if (headers.length > 0 && !caption) {
+        errors.push('Table with headers missing caption');
+      }
+      
+      headers.forEach(header => {
+        const scope = header.getAttribute('scope');
+        if (!scope || !['row', 'col', 'rowgroup', 'colgroup'].includes(scope)) {
+          errors.push('Table header missing or invalid scope attribute');
+        }
+      });
+    });
+    
+    return errors;
+  }
+
+  // Check for proper list structure
+  static checkListStructure(): string[] {
+    const errors: string[] = [];
+    const lists = document.querySelectorAll('ul, ol');
+    
+    lists.forEach(list => {
+      const listItems = list.querySelectorAll('li');
+      if (listItems.length === 0) {
+        errors.push('Empty list found');
+      }
+    });
+    
+    return errors;
+  }
+
+  // Check for proper button and link text
+  static checkInteractiveElementText(): string[] {
+    const errors: string[] = [];
+    const buttons = document.querySelectorAll('button');
+    const links = document.querySelectorAll('a[href]');
+    
+    buttons.forEach(button => {
+      const text = button.textContent?.trim();
+      const ariaLabel = button.getAttribute('aria-label');
+      
+      if (!text && !ariaLabel) {
+        errors.push('Button missing accessible text');
+      }
+    });
+    
+    links.forEach(link => {
+      const text = link.textContent?.trim();
+      const ariaLabel = link.getAttribute('aria-label');
+      const title = link.getAttribute('title');
+      
+      if (!text && !ariaLabel && !title) {
+        errors.push('Link missing accessible text');
+      }
+    });
+    
+    return errors;
+  }
+
+  // Comprehensive AAA compliance check
+  static runAAAComplianceCheck(): {
+    passed: boolean;
+    totalChecks: number;
+    passedChecks: number;
+    failedChecks: number;
+    results: {
+      category: string;
+      passed: boolean;
+      issues: string[];
+    }[];
+  } {
+    const results = [
+      {
+        category: 'Color Contrast',
+        passed: true,
+        issues: this.checkAllColorContrasts().filter(r => !r.compliant).map(r => 
+          `Insufficient contrast ratio ${r.ratio.toFixed(2)} for ${r.textSize} text`
+        )
+      },
+      {
+        category: 'ARIA Attributes',
+        passed: true,
+        issues: this.validateAriaAttributes(document.body)
+      },
+      {
+        category: 'Alt Text',
+        passed: true,
+        issues: this.checkMissingAltText().map(img => `Image missing alt text: ${img.src}`)
+      },
+      {
+        category: 'Heading Structure',
+        passed: true,
+        issues: this.checkHeadingStructure()
+      },
+      {
+        category: 'Keyboard Navigation',
+        passed: true,
+        issues: this.checkKeyboardNavigation()
+      },
+      {
+        category: 'Focus Indicators',
+        passed: true,
+        issues: this.checkFocusIndicators()
+      },
+      {
+        category: 'Form Labels',
+        passed: true,
+        issues: this.checkFormLabels()
+      },
+      {
+        category: 'Language Attributes',
+        passed: true,
+        issues: this.checkLanguageAttributes()
+      },
+      {
+        category: 'Skip Links',
+        passed: true,
+        issues: this.checkSkipLinks()
+      },
+      {
+        category: 'ARIA Landmarks',
+        passed: true,
+        issues: this.checkAriaLandmarks()
+      },
+      {
+        category: 'Table Structure',
+        passed: true,
+        issues: this.checkTableStructure()
+      },
+      {
+        category: 'List Structure',
+        passed: true,
+        issues: this.checkListStructure()
+      },
+      {
+        category: 'Interactive Element Text',
+        passed: true,
+        issues: this.checkInteractiveElementText()
+      }
+    ];
+
+    // Update passed status based on issues
+    results.forEach(result => {
+      result.passed = result.issues.length === 0;
+    });
+
+    const totalChecks = results.length;
+    const passedChecks = results.filter(r => r.passed).length;
+    const failedChecks = totalChecks - passedChecks;
+    const passed = failedChecks === 0;
+
+    return {
+      passed,
+      totalChecks,
+      passedChecks,
+      failedChecks,
+      results
+    };
   }
 }
 

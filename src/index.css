@@ -87,6 +87,116 @@
   scroll-behavior: auto !important;
 }
 
+/* Large text mode for AAA compliance */
+.large-text {
+  font-size: 1.2em !important;
+  line-height: 1.6 !important;
+}
+
+.large-text h1 { font-size: 2.4em !important; }
+.large-text h2 { font-size: 2.0em !important; }
+.large-text h3 { font-size: 1.8em !important; }
+.large-text h4 { font-size: 1.6em !important; }
+.large-text h5 { font-size: 1.4em !important; }
+.large-text h6 { font-size: 1.2em !important; }
+
+/* Dyslexia-friendly font support */
+.dyslexia-friendly {
+  font-family: 'OpenDyslexic', 'Arial', sans-serif !important;
+  letter-spacing: 0.1em !important;
+  word-spacing: 0.2em !important;
+  line-height: 1.8 !important;
+}
+
+/* Color blind support - add patterns and labels */
+.colorblind-support .color-indicator::before {
+  content: attr(data-pattern);
+  font-weight: bold;
+  margin-right: 0.5em;
+}
+
+.colorblind-support .status-success::before {
+  content: "✓ ";
+  color: #000;
+}
+
+.colorblind-support .status-error::before {
+  content: "✗ ";
+  color: #000;
+}
+
+.colorblind-support .status-warning::before {
+  content: "⚠ ";
+  color: #000;
+}
+
+/* Enhanced focus indicators for AAA compliance */
+*:focus-visible {
+  outline: 3px solid #2563eb !important;
+  outline-offset: 2px !important;
+  border-radius: 2px !important;
+}
+
+/* Ensure minimum touch target size (44px) for mobile accessibility */
+button, a, input[type="button"], input[type="submit"], input[type="reset"] {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+/* Enhanced form accessibility */
+input, select, textarea {
+  font-size: 16px !important; /* Prevents zoom on iOS */
+}
+
+/* Ensure sufficient spacing for touch targets */
+.nav-item, .menu-item {
+  padding: 12px 16px !important;
+}
+
+/* High contrast mode enhancements */
+.high-contrast {
+  --text-color: #000000 !important;
+  --bg-color: #ffffff !important;
+  --primary-color: #0000ff !important;
+  --secondary-color: #ff0000 !important;
+  --border-color: #000000 !important;
+  --link-color: #0000ff !important;
+  --visited-color: #800080 !important;
+}
+
+.high-contrast * {
+  background-color: var(--bg-color) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+.high-contrast a {
+  color: var(--link-color) !important;
+  text-decoration: underline !important;
+}
+
+.high-contrast a:visited {
+  color: var(--visited-color) !important;
+}
+
+.high-contrast .btn-primary {
+  background-color: var(--primary-color) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--bg-color) !important;
+}
+
+.high-contrast .btn-secondary {
+  background-color: var(--secondary-color) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--bg-color) !important;
+}
+
+/* Ensure proper contrast for focus indicators in high contrast mode */
+.high-contrast *:focus-visible {
+  outline: 3px solid #000000 !important;
+  outline-offset: 2px !important;
+}
+
 /* Live regions */
 [aria-live="polite"] {
   position: absolute;

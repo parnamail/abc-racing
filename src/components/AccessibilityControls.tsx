@@ -50,31 +50,32 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({ className
     focusManager.announce(`Letter spacing changed to ${spacing}px`);
   };
 
-  // Run accessibility tests
+  // Run comprehensive AAA accessibility tests
   const runAccessibilityTests = () => {
-    const results: string[] = [];
-
-    // Check for missing alt text
-    const missingAltImages = AccessibilityTester.checkMissingAltText();
-    if (missingAltImages.length > 0) {
-      results.push(`Found ${missingAltImages.length} images without alt text`);
-    }
-
-    // Check heading structure
-    const headingErrors = AccessibilityTester.checkHeadingStructure();
-    results.push(...headingErrors);
-
-    // Check keyboard navigation
-    const keyboardErrors = AccessibilityTester.checkKeyboardNavigation();
-    results.push(...keyboardErrors);
-
-    setTestResults(results);
+    const complianceResults = AccessibilityTester.runAAAComplianceCheck();
     
-    if (results.length === 0) {
-      focusManager.announce('All accessibility tests passed');
+    // Format results for display
+    const formattedResults: string[] = [];
+    
+    complianceResults.results.forEach(category => {
+      if (!category.passed) {
+        formattedResults.push(`\n${category.category}:`);
+        category.issues.forEach(issue => {
+          formattedResults.push(`  • ${issue}`);
+        });
+      }
+    });
+    
+    setTestResults(formattedResults);
+    
+    if (complianceResults.passed) {
+      focusManager.announce('All AAA accessibility tests passed!');
     } else {
-      focusManager.announce(`Found ${results.length} accessibility issues`);
+      focusManager.announce(`Found ${complianceResults.failedChecks} accessibility issues across ${complianceResults.totalChecks} categories`);
     }
+    
+    // Log detailed results for developers
+    console.log('AAA Accessibility Compliance Report:', complianceResults);
   };
 
   // Handle keyboard navigation
@@ -231,14 +232,71 @@ const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({ className
               </div>
             </div>
 
-            {/* Accessibility Test Button */}
+            {/* AAA Level Accessibility Test Button */}
             <div>
               <button
                 onClick={runAccessibilityTests}
-                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
+                aria-describedby="test-description"
               >
-                Run Accessibility Tests
+                🎯 Run AAA Accessibility Tests
               </button>
+              <p id="test-description" className="text-xs text-gray-500 mt-1">
+                Comprehensive WCAG 2.1 AAA level compliance testing
+              </p>
+            </div>
+
+            {/* Additional AAA Features */}
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Additional AAA Features</h3>
+              
+              {/* Large Text Mode */}
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    onChange={() => {
+                      document.body.classList.toggle('large-text');
+                      focusManager.announce('Large text mode toggled');
+                    }}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Large Text Mode</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">Increases text size for better readability</p>
+              </div>
+
+              {/* Dyslexia-Friendly Font */}
+              <div className="mt-3">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    onChange={() => {
+                      document.body.classList.toggle('dyslexia-friendly');
+                      focusManager.announce('Dyslexia-friendly font toggled');
+                    }}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Dyslexia-Friendly Font</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">Uses OpenDyslexic font for better readability</p>
+              </div>
+
+              {/* Color Blind Support */}
+              <div className="mt-3">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    onChange={() => {
+                      document.body.classList.toggle('colorblind-support');
+                      focusManager.announce('Color blind support toggled');
+                    }}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Color Blind Support</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">Adds patterns and labels to color-coded elements</p>
+              </div>
             </div>
 
             {/* Test Results */}
