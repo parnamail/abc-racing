@@ -4,20 +4,103 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1f2937">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ABC Racing" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="msapplication-tap-highlight" content="no" />
     <meta
       name="description"
-      content="ABC Racing - Formula 1 Dashboard and News"
+      content="ABC Racing - Comprehensive Formula 1 racing news, driver statistics, and live updates with offline viewing capabilities"
     />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <meta name="keywords" content="Formula 1, F1, racing, drivers, news, statistics, motorsport" />
+    <meta name="author" content="ABC Racing" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://abc-racing.com/" />
+    <meta property="og:title" content="ABC Racing - F1 News and Statistics" />
+    <meta property="og:description" content="Comprehensive Formula 1 racing news, driver statistics, and live updates" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://abc-racing.com/" />
+    <meta property="twitter:title" content="ABC Racing - F1 News and Statistics" />
+    <meta property="twitter:description" content="Comprehensive Formula 1 racing news, driver statistics, and live updates" />
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/icon-152x152.png" />
+    
+    <!-- Android Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/icon-72x72.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/icon-72x72.png" />
+    <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#2563eb" />
+    
+    <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>ABC Racing</title>
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="//images.unsplash.com" />
+    
+    <title>ABC Racing - F1 News and Statistics</title>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ABC Racing",
+      "description": "Comprehensive Formula 1 racing news, driver statistics, and live updates",
+      "url": "https://abc-racing.com",
+      "applicationCategory": "SportsApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "ABC Racing"
+      }
+    }
+    </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="text-align: center; padding: 2rem; font-family: Arial, sans-serif;">
+        <h1>ABC Racing</h1>
+        <p>You need to enable JavaScript to run this app.</p>
+        <p>This application provides comprehensive Formula 1 racing news, driver statistics, and live updates with offline viewing capabilities.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

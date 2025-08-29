@@ -1,7 +1,12 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import ShimmerUI from './components/ShimmerUI';
+import AccessibilityControls from './components/AccessibilityControls';
+import OfflineControls from './components/OfflineControls';
+import { offlineManager } from './utils/offlineManager';
+import { screenReader } from './utils/accessibility';
+import './i18n'; // Import i18n configuration
 
 // Lazy load microfrontends for better performance
 const Dashboard = React.lazy(() => import('./microfrontends/Dashboard'));
@@ -17,11 +22,25 @@ const MicrofrontendLoader: React.FC = () => (
 );
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Initialize offline manager
+    const initializeApp = async () => {
+      try {
+        await offlineManager.initialize();
+        screenReader.announcePageTitle('ABC Racing - F1 News and Statistics');
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <main>
+        <main id="main-content" role="main" className="pt-16">
           <Suspense fallback={<MicrofrontendLoader />}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -31,6 +50,10 @@ const App: React.FC = () => {
             </Routes>
           </Suspense>
         </main>
+        
+        {/* Accessibility and Offline Controls */}
+        <AccessibilityControls />
+        <OfflineControls />
       </div>
     </Router>
   );
