@@ -2,7 +2,19 @@
   "app": {
     "title": "ABC Racing",
     "subtitle": "Notizie e Statistiche F1",
-    "description": "Notizie complete di Formula 1, statistiche dei piloti e aggiornamenti live con capacità di visualizzazione offline"
+    "description": "Notizie complete di Formula 1, statistiche dei piloti e aggiornamenti in diretta con capacità di visualizzazione offline"
+  },
+  "languages": {
+    "english": "Inglese",
+    "spanish": "Spagnolo",
+    "french": "Francese",
+    "german": "Tedesco",
+    "italian": "Italiano",
+    "portuguese": "Portoghese",
+    "japanese": "Giapponese",
+    "chinese": "Cinese",
+    "arabic": "Arabo",
+    "hindi": "Hindi"
   },
   "navigation": {
     "dashboard": "Dashboard",

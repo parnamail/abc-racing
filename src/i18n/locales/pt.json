@@ -4,8 +4,20 @@
     "subtitle": "Notícias e Estatísticas F1",
     "description": "Notícias abrangentes de Fórmula 1, estatísticas de pilotos e atualizações ao vivo com capacidades de visualização offline"
   },
+  "languages": {
+    "english": "Inglês",
+    "spanish": "Espanhol",
+    "french": "Francês",
+    "german": "Alemão",
+    "italian": "Italiano",
+    "portuguese": "Português",
+    "japanese": "Japonês",
+    "chinese": "Chinês",
+    "arabic": "Árabe",
+    "hindi": "Hindi"
+  },
   "navigation": {
-    "dashboard": "Painel",
+    "dashboard": "Painel de Controle",
     "drivers": "Pilotos",
     "news": "Notícias",
     "bookmarks": "Favoritos",

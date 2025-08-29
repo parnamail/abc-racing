@@ -4,6 +4,18 @@
     "subtitle": "Actualités et Statistiques F1",
     "description": "Actualités complètes de Formule 1, statistiques des pilotes et mises à jour en direct avec capacités de visualisation hors ligne"
   },
+  "languages": {
+    "english": "Anglais",
+    "spanish": "Espagnol",
+    "french": "Français",
+    "german": "Allemand",
+    "italian": "Italien",
+    "portuguese": "Portugais",
+    "japanese": "Japonais",
+    "chinese": "Chinois",
+    "arabic": "Arabe",
+    "hindi": "Hindi"
+  },
   "navigation": {
     "dashboard": "Tableau de Bord",
     "drivers": "Pilotes",

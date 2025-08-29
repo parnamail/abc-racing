@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  offlineManager, 
-  OfflineContent, 
-  OfflinePreferences 
-} from '../utils/offlineManager';
-import { focusManager } from '../utils/accessibility';
+  useOfflineStatus,
+  useOfflineContent,
+  useStorageUsage,
+  useOfflinePreferences,
+  useContentCaching,
+  useSyncOperations,
+  useDatabaseOperations,
+  formatFileSize
+} from '../utils/offlineHooks';
 
 interface OfflineControlsProps {
   className?: string;
@@ -12,207 +16,53 @@ interface OfflineControlsProps {
 
 const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [offlineContent, setOfflineContent] = useState<OfflineContent[]>([]);
-  const [preferences, setPreferences] = useState<OfflinePreferences>(offlineManager.getPreferences());
-  const [storageUsage, setStorageUsage] = useState({ used: 0, total: 0 });
-  const [isCaching, setIsCaching] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
 
-  // Initialize offline manager and load data
+  // Use custom hooks for better organization and performance
+  const { isOnline, networkStatus } = useOfflineStatus();
+  const { offlineContent, refreshContent } = useOfflineContent();
+  const { 
+    storageUsage, 
+    usagePercentage, 
+    isStorageFull, 
+    availableSpace,
+    refreshStorageUsage 
+  } = useStorageUsage();
+  const { 
+    preferences, 
+    updatePreference, 
+    updateContentTypePreference 
+  } = useOfflinePreferences();
+  const { 
+    isCaching, 
+    cachingType, 
+    cacheContent, 
+    removeCachedContent, 
+    clearAllContent 
+  } = useContentCaching();
+  const { 
+    lastSyncTime, 
+    syncData, 
+    isSyncing, 
+    isSyncSuccess, 
+    isSyncError 
+  } = useSyncOperations();
+  const { isResetting, resetDatabase } = useDatabaseOperations();
+
+  // Refresh data when panel opens
   useEffect(() => {
-    const initializeOffline = async () => {
-      await offlineManager.initialize();
-      loadOfflineData();
-      loadStorageUsage();
-    };
-
-    initializeOffline();
-
-    // Listen for network status changes
-    const handleNetworkChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      setIsOnline(customEvent.detail.isOnline);
-    };
-
-    window.addEventListener('offlineManager:networkStatusChange', handleNetworkChange as EventListener);
-
-    return () => {
-      window.removeEventListener('offlineManager:networkStatusChange', handleNetworkChange as EventListener);
-    };
-  }, []);
-
-  // Load offline content data
-  const loadOfflineData = () => {
-    const availableContent = offlineManager.getAvailableOfflineContent();
-    setOfflineContent(availableContent);
-  };
-
-  // Load storage usage
-  const loadStorageUsage = async () => {
-    const usage = await offlineManager.getStorageUsage();
-    setStorageUsage(usage);
-  };
-
-  // Handle caching content
-  const handleCacheContent = async (type: string) => {
-    setIsCaching(true);
-    try {
-      // Simulate fetching data (in real app, this would be API calls)
-      const mockData = getMockDataForType(type);
-      const success = await offlineManager.cacheContent(type, mockData);
-      
-      if (success) {
-        focusManager.announce(`${type} content cached successfully`);
-        loadOfflineData();
-        loadStorageUsage();
-      } else {
-        focusManager.announce(`Failed to cache ${type} content`);
-      }
-    } catch (error) {
-      console.error(`Failed to cache ${type}:`, error);
-      focusManager.announce(`Error caching ${type} content`);
-    } finally {
-      setIsCaching(false);
+    if (isOpen) {
+      refreshContent();
+      refreshStorageUsage();
     }
-  };
+  }, [isOpen, refreshContent, refreshStorageUsage]);
 
-  // Handle removing cached content
-  const handleRemoveContent = async (type: string) => {
-    try {
-      const success = await offlineManager.removeCachedContent(type);
-      if (success) {
-        focusManager.announce(`${type} content removed`);
-        loadOfflineData();
-        loadStorageUsage();
-      } else {
-        focusManager.announce(`Failed to remove ${type} content`);
-      }
-    } catch (error) {
-      console.error(`Failed to remove ${type}:`, error);
-      focusManager.announce(`Error removing ${type} content`);
+  // Handle operations with automatic refresh
+  const handleOperation = async (operation: () => Promise<boolean>) => {
+    const success = await operation();
+    if (success) {
+      refreshContent();
+      refreshStorageUsage();
     }
-  };
-
-  // Handle clearing all content
-  const handleClearAllContent = async () => {
-    if (window.confirm('Are you sure you want to clear all offline content?')) {
-      try {
-        const success = await offlineManager.clearAllCachedContent();
-        if (success) {
-          focusManager.announce('All offline content cleared');
-          loadOfflineData();
-          loadStorageUsage();
-        } else {
-          focusManager.announce('Failed to clear offline content');
-        }
-      } catch (error) {
-        console.error('Failed to clear content:', error);
-        focusManager.announce('Error clearing offline content');
-      }
-    }
-  };
-
-  // Handle resetting IndexedDB
-  const handleResetDatabase = async () => {
-    if (window.confirm('Are you sure you want to reset the offline database? This will delete all cached data and recreate the database structure.')) {
-      try {
-        await offlineManager.resetIndexedDB();
-        focusManager.announce('Database reset successfully');
-        loadOfflineData();
-        loadStorageUsage();
-      } catch (error) {
-        console.error('Failed to reset database:', error);
-        focusManager.announce('Error resetting database');
-      }
-    }
-  };
-
-  // Handle syncing data
-  const handleSyncData = async () => {
-    setSyncStatus('syncing');
-    try {
-      await offlineManager.syncOfflineData();
-      setSyncStatus('success');
-      focusManager.announce('Data synced successfully');
-      setTimeout(() => setSyncStatus('idle'), 3000);
-    } catch (error) {
-      setSyncStatus('error');
-      focusManager.announce('Failed to sync data');
-      setTimeout(() => setSyncStatus('idle'), 3000);
-    }
-  };
-
-  // Handle preference changes
-  const handlePreferenceChange = (key: keyof OfflinePreferences, value: any) => {
-    const newPreferences = { ...preferences, [key]: value };
-    setPreferences(newPreferences);
-    offlineManager.updatePreferences(newPreferences);
-    focusManager.announce(`${key} preference updated`);
-  };
-
-  // Handle content type preference changes
-  const handleContentTypeChange = (type: string, enabled: boolean) => {
-    const newPreferences = {
-      ...preferences,
-      contentTypes: {
-        ...preferences.contentTypes,
-        [type]: enabled
-      }
-    };
-    setPreferences(newPreferences);
-    offlineManager.updatePreferences(newPreferences);
-    focusManager.announce(`${type} offline content ${enabled ? 'enabled' : 'disabled'}`);
-  };
-
-  // Get mock data for different content types
-  const getMockDataForType = (type: string) => {
-    const mockData = {
-      drivers: {
-        drivers: [
-          { id: 1, name: 'Max Verstappen', team: 'Red Bull Racing', points: 85 },
-          { id: 2, name: 'Charles Leclerc', team: 'Ferrari', points: 72 }
-        ]
-      },
-      news: {
-        articles: [
-          { id: 1, title: 'Latest F1 News', content: 'Formula 1 updates...' },
-          { id: 2, title: 'Race Results', content: 'Recent race outcomes...' }
-        ]
-      },
-      dashboard: {
-        stats: {
-          totalRaces: 24,
-          totalDrivers: 20,
-          currentSeason: 2024
-        }
-      },
-      bookmarks: {
-        bookmarks: {
-          drivers: [],
-          news: [],
-          races: [],
-          teams: []
-        }
-      }
-    };
-
-    return mockData[type as keyof typeof mockData] || {};
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // Format storage usage percentage
-  const getStorageUsagePercentage = (): number => {
-    if (storageUsage.total === 0) return 0;
-    return Math.round((storageUsage.used / storageUsage.total) * 100);
   };
 
   return (
@@ -269,9 +119,14 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                 isOnline ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
               }`}>
-                {isOnline ? 'Online' : 'Offline'}
+                {networkStatus === 'online' ? 'Online' : 'Offline'}
               </span>
             </div>
+            {lastSyncTime && (
+              <p className="text-xs text-gray-500 mt-1">
+                Last sync: {lastSyncTime.toLocaleTimeString()}
+              </p>
+            )}
           </div>
 
           {/* Storage Usage */}
@@ -284,13 +139,21 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${getStorageUsagePercentage()}%` }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  isStorageFull ? 'bg-red-600' : 'bg-blue-600'
+                }`}
+                style={{ width: `${usagePercentage}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {getStorageUsagePercentage()}% used
-            </p>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>{usagePercentage}% used</span>
+              <span>{formatFileSize(availableSpace)} available</span>
+            </div>
+            {isStorageFull && (
+              <p className="text-xs text-red-600 mt-1">
+                Storage almost full! Consider clearing some content.
+              </p>
+            )}
           </div>
 
           {/* Offline Content */}
@@ -306,7 +169,7 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
                     </div>
                   </div>
                   <button
-                    onClick={() => handleRemoveContent(content.type)}
+                    onClick={() => handleOperation(() => removeCachedContent(content.type))}
                     className="text-red-600 hover:text-red-800 text-sm"
                     aria-label={`Remove ${content.title} from offline storage`}
                   >
@@ -327,11 +190,15 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
               {['drivers', 'news', 'dashboard', 'bookmarks'].map((type) => (
                 <button
                   key={type}
-                  onClick={() => handleCacheContent(type)}
+                  onClick={() => handleOperation(() => cacheContent(type))}
                   disabled={isCaching}
-                  className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${
+                    isCaching && cachingType === type
+                      ? 'bg-blue-200 text-blue-800'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
                 >
-                  {isCaching ? 'Caching...' : `Cache ${type}`}
+                  {isCaching && cachingType === type ? 'Caching...' : `Cache ${type}`}
                 </button>
               ))}
             </div>
@@ -342,17 +209,17 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">Sync Data</span>
               <button
-                onClick={handleSyncData}
-                disabled={!isOnline || syncStatus === 'syncing'}
-                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={syncData}
+                disabled={!isOnline || isSyncing}
+                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                {syncStatus === 'syncing' ? 'Syncing...' : 'Sync Now'}
+                {isSyncing ? 'Syncing...' : 'Sync Now'}
               </button>
             </div>
-            {syncStatus === 'success' && (
+            {isSyncSuccess && (
               <p className="text-xs text-green-600">Data synced successfully</p>
             )}
-            {syncStatus === 'error' && (
+            {isSyncError && (
               <p className="text-xs text-red-600">Sync failed</p>
             )}
           </div>
@@ -365,7 +232,7 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
                 <input
                   type="checkbox"
                   checked={preferences.enableOfflineMode}
-                  onChange={(e) => handlePreferenceChange('enableOfflineMode', e.target.checked)}
+                  onChange={(e) => updatePreference('enableOfflineMode', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Enable Offline Mode</span>
@@ -375,7 +242,7 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
                 <input
                   type="checkbox"
                   checked={preferences.autoSync}
-                  onChange={(e) => handlePreferenceChange('autoSync', e.target.checked)}
+                  onChange={(e) => updatePreference('autoSync', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Auto Sync</span>
@@ -391,7 +258,7 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
                   max="120"
                   step="5"
                   value={preferences.syncInterval}
-                  onChange={(e) => handlePreferenceChange('syncInterval', Number(e.target.value))}
+                  onChange={(e) => updatePreference('syncInterval', Number(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -411,7 +278,7 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
                   max="100"
                   step="10"
                   value={preferences.maxStorageSize}
-                  onChange={(e) => handlePreferenceChange('maxStorageSize', Number(e.target.value))}
+                  onChange={(e) => updatePreference('maxStorageSize', Number(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -432,7 +299,7 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
                   <input
                     type="checkbox"
                     checked={enabled}
-                    onChange={(e) => handleContentTypeChange(type, e.target.checked)}
+                    onChange={(e) => updateContentTypePreference(type, e.target.checked)}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700 capitalize">{type}</span>
@@ -444,16 +311,17 @@ const OfflineControls: React.FC<OfflineControlsProps> = ({ className = '' }) => 
           {/* Clear All Button */}
           <div className="border-t pt-4 space-y-2">
             <button
-              onClick={handleClearAllContent}
+              onClick={() => handleOperation(clearAllContent)}
               className="w-full px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200"
             >
               Clear All Offline Content
             </button>
             <button
-              onClick={handleResetDatabase}
-              className="w-full px-4 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200"
+              onClick={() => handleOperation(resetDatabase)}
+              disabled={isResetting}
+              className="w-full px-4 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Reset Database (Troubleshoot)
+              {isResetting ? 'Resetting...' : 'Reset Database (Troubleshoot)'}
             </button>
           </div>
         </div>

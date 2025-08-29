@@ -4,6 +4,18 @@
     "subtitle": "F1 News and Statistics",
     "description": "Comprehensive Formula 1 racing news, driver statistics, and live updates with offline viewing capabilities"
   },
+  "languages": {
+    "english": "English",
+    "spanish": "Spanish",
+    "french": "French",
+    "german": "German",
+    "italian": "Italian",
+    "portuguese": "Portuguese",
+    "japanese": "Japanese",
+    "chinese": "Chinese",
+    "arabic": "Arabic",
+    "hindi": "Hindi"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "drivers": "Drivers",
@@ -15,6 +27,7 @@
   },
   "dashboard": {
     "title": "F1 Dashboard",
+    "subtitle": "Formula 1 racing statistics and insights",
     "quickStats": "Quick Stats",
     "bookmarksSummary": "Bookmarks Summary",
     "seasonProgress": "Season Progress",
@@ -28,10 +41,23 @@
     "seasonProgressTitle": "Season Progress",
     "racesCompleted": "Races Completed",
     "racesRemaining": "Races Remaining",
-    "progressPercentage": "{{percentage}}% Complete"
+    "progressPercentage": "{{percentage}}% Complete",
+    "races": "Races",
+    "teams": "Teams",
+    "drivers": "Drivers",
+    "countries": "Countries",
+    "news": "News",
+    "totalBookmarks": "Total Bookmarks",
+    "viewAllBookmarks": "View All Bookmarks",
+    "addToBookmarks": "Add to bookmarks",
+    "removeFromBookmarks": "Remove from bookmarks",
+    "racesCompletedText": "{{completed}} of {{total}} races completed",
+    "nextRace": "Next: {{race}}"
   },
   "drivers": {
     "title": "F1 Drivers",
+    "driver": "driver",
+    "drivers": "drivers",
     "searchPlaceholder": "Search drivers...",
     "teamFilter": "Filter by Team",
     "allTeams": "All Teams",
@@ -53,7 +79,8 @@
   },
   "news": {
     "title": "F1 News",
-    "searchPlaceholder": "Search news...",
+    "subtitle": "Latest Formula 1 news and updates",
+    "searchPlaceholder": "Search news articles...",
     "categoryFilter": "Filter by Category",
     "allCategories": "All Categories",
     "raceReports": "Race Reports",
@@ -65,12 +92,26 @@
     "publishedOn": "Published on {{date}}",
     "author": "By {{author}}",
     "category": "Category: {{category}}",
-    "noNewsFound": "No news articles found matching your search.",
+    "noNewsFound": "No articles found",
     "loadingNews": "Loading news...",
     "errorLoadingNews": "Error loading news. Please try again.",
-    "bookmarkArticle": "Bookmark this article",
-    "removeBookmark": "Remove bookmark",
-    "bookmarkedArticles": "Bookmarked Articles"
+    "bookmarkArticle": "Add to bookmarks",
+    "removeBookmark": "Remove from bookmarks",
+    "bookmarkedArticles": "Bookmarked Articles",
+    "showAll": "Show All",
+    "bookmarks": "Bookmarks",
+    "featuredNews": "Featured News",
+    "latestNews": "Latest News",
+    "tryAdjustingSearch": "Try adjusting your search criteria",
+    "readTime": "min read",
+    "min": "min",
+    "categories": {
+      "race": "Race",
+      "team": "Team",
+      "driver": "Driver",
+      "technical": "Technical",
+      "general": "General"
+    }
   },
   "bookmarks": {
     "title": "My Bookmarks",
@@ -184,7 +225,8 @@
     "offline": "You are currently offline",
     "online": "You are back online",
     "connectionRestored": "Connection restored",
-    "connectionLost": "Connection lost"
+    "connectionLost": "Connection lost",
+    "pageInfo": "Page {{current}} of {{total}}"
   },
   "teams": {
     "redBull": "Red Bull Racing",

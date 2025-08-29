@@ -31,7 +31,7 @@ interface BookmarkedRace {
   bookmarkedAt: string;
 }
 
-interface Bookmarks {
+interface BookmarkData {
   drivers: BookmarkedDriver[];
   news: BookmarkedNews[];
   races: BookmarkedRace[];
@@ -39,7 +39,7 @@ interface Bookmarks {
 
 const Bookmarks: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [bookmarks, setBookmarks] = useState<Bookmarks>({
+  const [bookmarks, setBookmarks] = useState<BookmarkData>({
     drivers: [],
     news: [],
     races: []
@@ -50,7 +50,7 @@ const Bookmarks: React.FC = () => {
   useEffect(() => {
     // Simulate API call to load bookmarks
     const timer = setTimeout(() => {
-      const mockBookmarks: Bookmarks = {
+      const mockBookmarks: BookmarkData = {
         drivers: [
           {
             id: 1,

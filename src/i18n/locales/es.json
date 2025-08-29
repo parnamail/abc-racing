@@ -2,10 +2,22 @@
   "app": {
     "title": "ABC Racing",
     "subtitle": "Noticias y Estadísticas de F1",
-    "description": "Noticias completas de Fórmula 1, estadísticas de pilotos y actualizaciones en vivo con capacidades de visualización sin conexión"
+    "description": "Noticias completas de Fórmula 1, estadísticas de pilotos y actualizaciones en vivo con capacidades de visualización offline"
+  },
+  "languages": {
+    "english": "Inglés",
+    "spanish": "Español",
+    "french": "Francés",
+    "german": "Alemán",
+    "italian": "Italiano",
+    "portuguese": "Portugués",
+    "japanese": "Japonés",
+    "chinese": "Chino",
+    "arabic": "Árabe",
+    "hindi": "Hindi"
   },
   "navigation": {
-    "dashboard": "Panel",
+    "dashboard": "Panel de Control",
     "drivers": "Pilotos",
     "news": "Noticias",
     "bookmarks": "Marcadores",

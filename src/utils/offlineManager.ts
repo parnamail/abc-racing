@@ -59,13 +59,18 @@ export class OfflineManager {
       // Set up online/offline event listeners
       this.setupNetworkListeners();
       
-      // Try to initialize offline content, reset DB if it fails
+      // Try to initialize offline content with better error handling
       try {
         await this.initializeOfflineContent();
       } catch (dbError) {
-        console.warn('Database initialization failed, resetting IndexedDB:', dbError);
-        await this.resetIndexedDB();
-        await this.initializeOfflineContent();
+        console.warn('Database initialization failed, attempting to reset IndexedDB:', dbError);
+        try {
+          await this.resetIndexedDB();
+          await this.initializeOfflineContent();
+        } catch (resetError) {
+          console.error('Failed to reset IndexedDB, continuing without offline functionality:', resetError);
+          // Continue without offline functionality rather than failing completely
+        }
       }
       
       console.log('Offline manager initialized successfully');
@@ -384,7 +389,8 @@ export class OfflineManager {
   // IndexedDB operations
   private async storeInIndexedDB(type: string, data: any): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('F1RacingOffline', 2); // Increment version
+      // Use a higher version to ensure compatibility
+      const request = indexedDB.open('F1RacingOffline', 3);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -405,9 +411,11 @@ export class OfflineManager {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = event.oldVersion;
         
-        // Delete old database if upgrading from version 1
-        if (oldVersion < 2) {
-          // Delete existing object stores
+        console.log(`Upgrading IndexedDB from version ${oldVersion} to 3`);
+        
+        // Handle any version upgrades
+        if (oldVersion < 3) {
+          // Delete existing object stores if they exist
           if (db.objectStoreNames.contains('content')) {
             db.deleteObjectStore('content');
           }
@@ -423,7 +431,7 @@ export class OfflineManager {
 
   private async getFromIndexedDB(type: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('F1RacingOffline', 2); // Increment version
+      const request = indexedDB.open('F1RacingOffline', 3);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -446,9 +454,11 @@ export class OfflineManager {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = event.oldVersion;
         
-        // Delete old database if upgrading from version 1
-        if (oldVersion < 2) {
-          // Delete existing object stores
+        console.log(`Upgrading IndexedDB from version ${oldVersion} to 3`);
+        
+        // Handle any version upgrades
+        if (oldVersion < 3) {
+          // Delete existing object stores if they exist
           if (db.objectStoreNames.contains('content')) {
             db.deleteObjectStore('content');
           }
@@ -464,7 +474,7 @@ export class OfflineManager {
 
   private async removeFromIndexedDB(type: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('F1RacingOffline', 2); // Increment version
+      const request = indexedDB.open('F1RacingOffline', 3);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -485,9 +495,11 @@ export class OfflineManager {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = event.oldVersion;
         
-        // Delete old database if upgrading from version 1
-        if (oldVersion < 2) {
-          // Delete existing object stores
+        console.log(`Upgrading IndexedDB from version ${oldVersion} to 3`);
+        
+        // Handle any version upgrades
+        if (oldVersion < 3) {
+          // Delete existing object stores if they exist
           if (db.objectStoreNames.contains('content')) {
             db.deleteObjectStore('content');
           }
@@ -503,7 +515,7 @@ export class OfflineManager {
 
   private async clearIndexedDB(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('F1RacingOffline', 2); // Increment version
+      const request = indexedDB.open('F1RacingOffline', 3);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -524,9 +536,11 @@ export class OfflineManager {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = event.oldVersion;
         
-        // Delete old database if upgrading from version 1
-        if (oldVersion < 2) {
-          // Delete existing object stores
+        console.log(`Upgrading IndexedDB from version ${oldVersion} to 3`);
+        
+        // Handle any version upgrades
+        if (oldVersion < 3) {
+          // Delete existing object stores if they exist
           if (db.objectStoreNames.contains('content')) {
             db.deleteObjectStore('content');
           }
@@ -606,7 +620,21 @@ export class OfflineManager {
       }
     } catch (error) {
       console.error('Failed to load offline data:', error);
-      throw error; // Re-throw to trigger database reset
+      
+      // Check if it's a version error and handle it gracefully
+      if (error instanceof Error && error.name === 'VersionError') {
+        console.warn('Version conflict detected, attempting to reset database...');
+        try {
+          await this.resetIndexedDB();
+          // Try to load data again after reset
+          await this.loadOfflineData();
+        } catch (resetError) {
+          console.error('Failed to reset database after version conflict:', resetError);
+          // Continue without offline functionality
+        }
+      } else {
+        throw error; // Re-throw other errors to trigger database reset
+      }
     }
   }
 
@@ -618,6 +646,21 @@ export class OfflineManager {
 
   getPreferences(): OfflinePreferences {
     return { ...this.preferences };
+  }
+
+  getDefaultPreferences(): OfflinePreferences {
+    return {
+      enableOfflineMode: true,
+      autoSync: true,
+      syncInterval: 30,
+      maxStorageSize: 50,
+      contentTypes: {
+        drivers: true,
+        news: true,
+        dashboard: true,
+        bookmarks: true
+      }
+    };
   }
 
   private loadPreferences(): void {

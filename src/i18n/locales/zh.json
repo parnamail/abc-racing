@@ -2,7 +2,19 @@
   "app": {
     "title": "ABC Racing",
     "subtitle": "F1新闻与统计",
-    "description": "全面的F1赛车新闻、车手统计和具有离线观看功能的实时更新"
+    "description": "全面的F1赛车新闻、车手统计数据和离线查看功能的实时更新"
+  },
+  "languages": {
+    "english": "英语",
+    "spanish": "西班牙语",
+    "french": "法语",
+    "german": "德语",
+    "italian": "意大利语",
+    "portuguese": "葡萄牙语",
+    "japanese": "日语",
+    "chinese": "中文",
+    "arabic": "阿拉伯语",
+    "hindi": "印地语"
   },
   "navigation": {
     "dashboard": "仪表板",

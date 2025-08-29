@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from '../components/Card';
 import ShimmerUI from '../components/ShimmerUI';
+import { useBookmark, useCardFilter, useCardGrid } from '../utils/cardHooks';
 
 interface NewsArticle {
   id: number;
@@ -16,11 +18,36 @@ interface NewsArticle {
 }
 
 const News: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(true);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [bookmarkedArticles, setBookmarkedArticles] = useState<Set<number>>(new Set());
+
+  // Use custom hooks for better organization
+  const { 
+    bookmarkedItems, 
+    toggleBookmark, 
+    isBookmarked, 
+    bookmarksCount 
+  } = useBookmark();
+
+  const { 
+    searchTerm, 
+    setSearchTerm, 
+    selectedFilter, 
+    setSelectedFilter, 
+    filteredItems 
+  } = useCardFilter(articles, ['title', 'summary', 'author'], 'category');
+
+  const { 
+    currentItems, 
+    currentPage, 
+    totalPages, 
+    nextPage, 
+    prevPage, 
+    hasNextPage, 
+    hasPrevPage 
+  } = useCardGrid(filteredItems, 6);
+
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState<boolean>(false);
 
   useEffect(() => {
@@ -97,24 +124,21 @@ const News: React.FC = () => {
   }, []);
 
   const categories = [
-    { value: 'all', label: 'All News' },
-    { value: 'race', label: 'Race Reports' },
-    { value: 'team', label: 'Team News' },
-    { value: 'driver', label: 'Driver News' },
-    { value: 'technical', label: 'Technical' },
-    { value: 'general', label: 'General' }
+    { value: 'all', label: t('news.allCategories') },
+    { value: 'race', label: t('news.raceReports') },
+    { value: 'team', label: t('news.teamNews') },
+    { value: 'driver', label: t('news.driverNews') },
+    { value: 'technical', label: t('news.technicalNews') },
+    { value: 'general', label: t('news.regulations') }
   ];
 
-  const filteredArticles = articles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.summary.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
-    const matchesBookmark = !showBookmarkedOnly || isBookmarked(article.id);
-    return matchesSearch && matchesCategory && matchesBookmark;
-  });
+  // Apply bookmark filter
+  const displayArticles = showBookmarkedOnly 
+    ? filteredItems.filter(article => isBookmarked(article.id))
+    : filteredItems;
 
-  const featuredArticles = filteredArticles.filter(article => article.featured);
-  const regularArticles = filteredArticles.filter(article => !article.featured);
+  const featuredArticles = displayArticles.filter(article => article.featured);
+  const regularArticles = displayArticles.filter(article => !article.featured);
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -137,180 +161,167 @@ const News: React.FC = () => {
     }
   };
 
-  const toggleBookmark = (articleId: number) => {
-    setBookmarkedArticles(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(articleId)) {
-        newSet.delete(articleId);
-      } else {
-        newSet.add(articleId);
+  // Reusable article card component with enhanced Card usage
+  const renderArticleCard = (article: NewsArticle, isFeatured: boolean = false) => (
+    <Card
+      key={article.id}
+      id={article.id}
+      variant={isFeatured ? 'elevated' : 'default'}
+      size={isFeatured ? 'lg' : 'md'}
+      header={
+        <div className="flex items-start justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 pr-4">
+            {article.title}
+          </h3>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleBookmark(article.id);
+            }}
+            className={`flex-shrink-0 p-2 rounded-full transition-all duration-200 border-2 ${
+              isBookmarked(article.id)
+                ? 'text-yellow-500 border-yellow-300 bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-400'
+                : 'text-gray-400 border-gray-200 hover:text-yellow-500 hover:border-yellow-300 hover:bg-yellow-50'
+            }`}
+            title={isBookmarked(article.id) ? t('news.removeBookmark') : t('news.bookmarkArticle')}
+          >
+            {isBookmarked(article.id) ? '🔖' : '🔖'}
+          </button>
+        </div>
       }
-      return newSet;
-    });
-  };
-
-  const isBookmarked = (articleId: number): boolean => {
-    return bookmarkedArticles.has(articleId);
-  };
+      footer={
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-600">{t('news.author', { author: article.author })}</span>
+            <span className="text-gray-500">{formatDate(article.publishedAt)}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(article.category)}`}>
+              {t(`news.categories.${article.category}`)}
+            </span>
+            <span className="text-gray-500">
+              {isFeatured ? `${article.readTime} ${t('news.readTime')}` : `${article.readTime} ${t('news.min')}`}
+            </span>
+          </div>
+        </div>
+      }
+      className={isFeatured ? 'border-2 border-primary-200 bg-gradient-to-br from-primary-50 to-white' : ''}
+    >
+      <p className={`text-gray-700 ${!isFeatured ? 'line-clamp-3' : ''}`}>
+        {article.summary}
+      </p>
+    </Card>
+  );
 
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">F1 News</h1>
-          <p className="text-gray-600">Latest Formula 1 news and updates</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('news.title')}</h1>
+          <p className="text-gray-600">{t('news.subtitle')}</p>
         </div>
         <ShimmerUI type="news" count={6} />
       </div>
     );
   }
 
-    return (
+  return (
     <div className="max-w-7xl mx-auto mobile-padding">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-responsive-xl font-bold text-gray-900 mb-2">F1 News</h1>
-        <p className="text-responsive text-gray-600">Latest Formula 1 news and updates</p>
+        <h1 className="text-responsive-xl font-bold text-gray-900 mb-2">{t('news.title')}</h1>
+        <p className="text-responsive text-gray-600">{t('news.subtitle')}</p>
       </div>
 
       {/* Filters */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
-                   <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search news articles..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field"
-            />
-          </div>
-          <div className="sm:w-48">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="input-field"
-            >
-             {categories.map(category => (
-               <option key={category.value} value={category.value}>
-                 {category.label}
-               </option>
-             ))}
-           </select>
-         </div>
-         <div className="sm:w-auto">
-           <button
-             onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)}
-             className={`px-4 py-2 border rounded-md transition-colors duration-200 flex items-center space-x-2 ${
-               showBookmarkedOnly
-                 ? 'bg-yellow-100 border-yellow-300 text-yellow-800'
-                 : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-             }`}
-           >
-             <span>🔖</span>
-             <span>{showBookmarkedOnly ? 'Show All' : 'Bookmarks'}</span>
-             {bookmarkedArticles.size > 0 && (
-               <span className="ml-1 px-2 py-0.5 text-xs bg-yellow-200 text-yellow-800 rounded-full">
-                 {bookmarkedArticles.size}
-               </span>
-             )}
-           </button>
-         </div>
-       </div>
-
-             {/* Featured Articles */}
-       {featuredArticles.length > 0 && (
-         <div className="mb-6 sm:mb-8">
-           <h2 className="text-responsive-lg font-bold text-gray-900 mb-4">Featured News</h2>
-           <div className="responsive-grid-2 gap-4 sm:gap-6">
-            {featuredArticles.map((article) => (
-              <Card
-                key={article.id}
-                header={article.title}
-                className="border-2 border-primary-200 bg-gradient-to-br from-primary-50 to-white"
-              >
-                <div className="space-y-4">
-                  <p className="text-gray-700">{article.summary}</p>
-                                     <div className="flex items-center justify-between text-sm">
-                     <div className="flex items-center space-x-4">
-                       <span className="text-gray-600">By {article.author}</span>
-                       <span className="text-gray-500">{formatDate(article.publishedAt)}</span>
-                     </div>
-                     <div className="flex items-center space-x-2">
-                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(article.category)}`}>
-                         {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-                       </span>
-                       <span className="text-gray-500">{article.readTime} min read</span>
-                       <button
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           toggleBookmark(article.id);
-                         }}
-                         className={`p-2 rounded-full transition-colors duration-200 border ${
-                           isBookmarked(article.id)
-                             ? 'text-yellow-500 hover:text-yellow-600 border-yellow-300 bg-yellow-50'
-                             : 'text-gray-400 hover:text-yellow-500 border-gray-300 hover:border-yellow-300'
-                         }`}
-                         title={isBookmarked(article.id) ? 'Remove from bookmarks' : 'Add to bookmarks'}
-                       >
-                         {isBookmarked(article.id) ? '🔖' : '🔖'}
-                       </button>
-                     </div>
-                   </div>
-                </div>
-              </Card>
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder={t('news.searchPlaceholder')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input-field"
+          />
+        </div>
+        <div className="sm:w-48">
+          <select
+            value={selectedFilter}
+            onChange={(e) => setSelectedFilter(e.target.value)}
+            className="input-field"
+          >
+            {categories.map(category => (
+              <option key={category.value} value={category.value}>
+                {category.label}
+              </option>
             ))}
+          </select>
+        </div>
+        <div className="sm:w-auto">
+          <button
+            onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)}
+            className={`px-4 py-2 border rounded-md transition-colors duration-200 flex items-center space-x-2 ${
+              showBookmarkedOnly
+                ? 'bg-yellow-100 border-yellow-300 text-yellow-800'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span>🔖</span>
+            <span>{showBookmarkedOnly ? t('news.showAll') : t('news.bookmarks')}</span>
+            {bookmarksCount > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-xs bg-yellow-200 text-yellow-800 rounded-full">
+                {bookmarksCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Featured Articles */}
+      {featuredArticles.length > 0 && (
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-responsive-lg font-bold text-gray-900 mb-4">{t('news.featuredNews')}</h2>
+          <div className="responsive-grid-2 gap-4 sm:gap-6">
+            {featuredArticles.map((article) => renderArticleCard(article, true))}
           </div>
         </div>
       )}
 
-             {/* Regular Articles */}
-       <div>
-         <h2 className="text-responsive-lg font-bold text-gray-900 mb-4">Latest News</h2>
-         <div className="responsive-grid gap-4 sm:gap-6">
-          {regularArticles.map((article) => (
-            <Card
-              key={article.id}
-              header={article.title}
-              className="hover:scale-105 transition-transform duration-200"
-            >
-              <div className="space-y-4">
-                <p className="text-gray-700 line-clamp-3">{article.summary}</p>
-                                 <div className="flex items-center justify-between text-sm">
-                   <div className="flex items-center space-x-4">
-                     <span className="text-gray-600">By {article.author}</span>
-                     <span className="text-gray-500">{formatDate(article.publishedAt)}</span>
-                   </div>
-                   <div className="flex items-center space-x-2">
-                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(article.category)}`}>
-                       {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-                     </span>
-                     <span className="text-gray-500">{article.readTime} min</span>
-                     <button
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         toggleBookmark(article.id);
-                       }}
-                       className={`p-2 rounded-full transition-colors duration-200 border ${
-                         isBookmarked(article.id)
-                           ? 'text-yellow-500 hover:text-yellow-600 border-yellow-300 bg-yellow-50'
-                           : 'text-gray-400 hover:text-yellow-500 border-gray-300 hover:border-yellow-300'
-                       }`}
-                       title={isBookmarked(article.id) ? 'Remove from bookmarks' : 'Add to bookmarks'}
-                     >
-                       {isBookmarked(article.id) ? '🔖' : '🔖'}
-                     </button>
-                   </div>
-                 </div>
-              </div>
-            </Card>
-          ))}
+      {/* Regular Articles */}
+      <div>
+        <h2 className="text-responsive-lg font-bold text-gray-900 mb-4">{t('news.latestNews')}</h2>
+        <div className="responsive-grid gap-4 sm:gap-6">
+          {regularArticles.map((article) => renderArticleCard(article, false))}
         </div>
       </div>
 
-      {filteredArticles.length === 0 && (
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center items-center space-x-2">
+          <button
+            onClick={prevPage}
+            disabled={!hasPrevPage}
+            className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            {t('common.previous')}
+          </button>
+          <span className="px-4 py-2 text-gray-600">
+            {t('common.pageInfo', { current: currentPage, total: totalPages })}
+          </span>
+          <button
+            onClick={nextPage}
+            disabled={!hasNextPage}
+            className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            {t('common.next')}
+          </button>
+        </div>
+      )}
+
+      {displayArticles.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-400 text-6xl mb-4">📰</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No articles found</h3>
-          <p className="text-gray-600">Try adjusting your search criteria</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('news.noNewsFound')}</h3>
+          <p className="text-gray-600">{t('news.tryAdjustingSearch')}</p>
         </div>
       )}
     </div>
